@@ -198,6 +198,76 @@ torch::Tensor gemm_a4w4_asm(torch::Tensor& A,       // A:[M, K/2] f4x2
     args.stride_ScaleB0 = B_scale.stride(0);
     args.log2_k_split   = 0;
 
+    // --- IMPROVED LOGGING START ---
+    std::cout << "\n========== GEMM A4W4 ASM CALL LOG ==========" << std::endl;
+    std::cout << "Kernel Name: " << kernelName << std::endl;
+
+    // 1. TENSOR METADATA (More useful than printing full tensor content)
+    // Checks shapes and strides passed from PyTorch
+    auto print_meta = [](const std::string& name, const torch::Tensor& t) {
+        std::cout << name << ": Sizes=" << t.sizes()
+                  << ", Strides=" << t.strides()
+                  << ", Dtype=" << t.dtype()
+                  << ", Device=" << t.device() << std::endl;
+    };
+
+    print_meta("Tensor A", A);
+    print_meta("Tensor B", B);
+    print_meta("Tensor A_scale", A_scale);
+    print_meta("Tensor B_scale", B_scale); // Fixed typo (was printing A_scale)
+    print_meta("Tensor Out (D)", out);
+    if (bias.has_value()) {
+        print_meta("Tensor Bias (C)", bias.value());
+    } else {
+        std::cout << "Tensor Bias (C): [None]" << std::endl;
+    }
+
+    std::cout << "\n---------- KernelArgs Struct ----------" << std::endl;
+    std::cout << "Struct Size: " << sizeof(args) << " bytes" << std::endl;
+
+    // 2. POINTERS (Hex for address verification)
+    std::cout << std::hex; // Switch to hex
+    std::cout << "[Pointers]" << std::endl;
+    std::cout << "  ptr_D (Out)   : " << args.ptr_D << std::endl;
+    std::cout << "  ptr_C (Bias)  : " << args.ptr_C << std::endl;
+    std::cout << "  ptr_A         : " << args.ptr_A << std::endl;
+    std::cout << "  ptr_B         : " << args.ptr_B << std::endl;
+    std::cout << "  ptr_ScaleA    : " << args.ptr_ScaleA << std::endl;
+    std::cout << "  ptr_ScaleB    : " << args.ptr_ScaleB << std::endl;
+    std::cout << std::dec; // Switch back to decimal
+
+    // 3. GEOMETRY (GEMM Dimensions)
+    std::cout << "[Geometry]" << std::endl;
+    std::cout << "  M             : " << args.M << std::endl;
+    std::cout << "  N             : " << args.N << std::endl;
+    std::cout << "  K             : " << args.K << std::endl;
+    std::cout << "  alpha         : " << args.alpha << std::endl;
+    std::cout << "  beta          : " << args.beta << std::endl;
+    std::cout << "  log2_k_split  : " << args.log2_k_split << std::endl;
+
+    // 4. STRIDES (Crucial for correct data access)
+    // Note: Ensure all these are actually assigned in your code, otherwise they print garbage.
+    std::cout << "[Strides]" << std::endl;
+    std::cout << "  stride_D0     : " << args.stride_D0 << std::endl;
+    std::cout << "  stride_D1     : " << args.stride_D1 << std::endl;
+    std::cout << "  stride_C0     : " << args.stride_C0 << std::endl;
+    std::cout << "  stride_C1     : " << args.stride_C1 << std::endl;
+    std::cout << "  stride_A0     : " << args.stride_A0 << std::endl;
+    std::cout << "  stride_A1     : " << args.stride_A1 << std::endl;
+    std::cout << "  stride_B0     : " << args.stride_B0 << std::endl;
+    std::cout << "  stride_B1     : " << args.stride_B1 << std::endl;
+    std::cout << "  stride_ScaleA0: " << args.stride_ScaleA0 << std::endl;
+    std::cout << "  stride_ScaleA1: " << args.stride_ScaleA1 << std::endl;
+    std::cout << "  stride_ScaleB0: " << args.stride_ScaleB0 << std::endl;
+    std::cout << "  stride_ScaleB1: " << args.stride_ScaleB1 << std::endl;
+
+    std::cout << "============================================\n" << std::endl;
+    // --- LOGGING END ---
+
+    
+    std::abort();
+
+
     const at::hip::OptionalHIPGuardMasqueradingAsCUDA device_guard(device_of(A));
     const hipStream_t stream = at::hip::getCurrentHIPStream();
     CFG* config_map          = get_cfg(A, out);

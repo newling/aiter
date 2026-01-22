@@ -92,6 +92,7 @@ def gemm_a4w4(
     This function is a wrapper for the A4W4 GEMM kernel.
     It is used to perform matrix multiplication with 4-bit quantization.
     """
+    print("In gemm_a4w4")
     # Load the A4W4 GEMM kernel
     m = A.numel() // A.shape[-1]
     n = B.shape[0]
@@ -103,6 +104,7 @@ def gemm_a4w4(
             f"A4W4 GEMM kernel is not supported on gfx942, but got {gfx_arch}!"
         )
     ck_config = get_GEMM_config(m, n, k)
+    print("ck config is ", ck_config)
     # splitK = None
     splitK = 0
     kernelName = ""
@@ -114,6 +116,7 @@ def gemm_a4w4(
         and kernelName.find("_ZN") == -1
         # or bias is None
     ):
+        print("Entering case of no config")
         splitK = 0 if splitK is None else splitK
         return gemm_a4w4_blockscale(
             A.view(m, k // 2), B, A_scale, B_scale, out, splitK=splitK
@@ -121,6 +124,7 @@ def gemm_a4w4(
     assert (
         out.shape[0] % 32 == 0
     ), "Dim0 of gemm_a4w4_asm output needs to be padded to multiples of 32!"
+    print("Entering case of config")
     gemm_a4w4_asm(
         A.view(m, k // 2),
         B,
