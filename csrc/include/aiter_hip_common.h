@@ -96,6 +96,14 @@ class AiterAsmKernel
                           kargs.arg_size_ptr,
                           HIP_LAUNCH_PARAM_END};
 
+        std::cout << "[NEWLING] Launching" << std::endl;
+        std::cout << "gdx = " << kargs.gdx << std::endl;
+        std::cout << "gdy = " << kargs.gdy << std::endl;
+        std::cout << "gdz = " << kargs.gdz << std::endl;
+        std::cout << "bdx = " << kargs.bdx << std::endl;
+        std::cout << "bdy = " << kargs.bdy << std::endl;
+        std::cout << "bdz = " << kargs.bdz << std::endl;
+
         HIP_CALL(hipModuleLaunchKernel(kernel_func,
                                        kargs.gdx,
                                        kargs.gdy,
